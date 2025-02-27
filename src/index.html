@@ -97,8 +97,351 @@ eleventyNavigation:
         <img decoding="async" src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Images/People/mechanic.jpg" alt="mechanic" width="2250" height="1500" aria-hidden="true">
     </picture>
 </section>
-<a href="https://bk.snapfinance.com/origination?paramId=3w%2FEWVFzVGcQioSdKn1vuqdr2hNr3A1xiMt4CtG%2BqOUYuAV0du2Z%2FK2lEkK1hZ0tog9ZSjNG2GyQln5HQrzShOzYiaK%2FnFnEZXfXtyBXVEw%3D" target="_blank" rel="noopener noreferrer"><img src="https://assets.snapfinance.com/app/images/apply_image_16.jpeg" alt="Snap Finance - Apply Here" style = "box-shadow:4px 2px 6px #010101; border: none"/></a>                     
-                                                                                               
+
+<!-- ============================================ -->
+<!--                Promotion Banner              -->
+<!-- ============================================ -->
+
+<div style="display: flex;justify-content: center;padding: 6px;">
+    <a href="https://bk.snapfinance.com/origination?paramId=3w%2FEWVFzVGcQioSdKn1vuqdr2hNr3A1xiMt4CtG%2BqOUYuAV0du2Z%2FK2lEkK1hZ0tog9ZSjNG2GyQln5HQrzShOzYiaK%2FnFnEZXfXtyBXVEw%3D" target="_blank" rel="noopener noreferrer"><img src="https://assets.snapfinance.com/app/images/apply_image_16.jpeg" alt="Snap Finance - Apply Here" style = "box-shadow:4px 2px 6px #010101; border: none;width: 100%;"/></a>                     
+</div>
+
+
+
+<!-- ============================================ -->
+<!--                   Contact                    -->
+<!-- ============================================ -->
+<!-- Include jQuery and CarQuery API script -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+    select {
+  appearance: none;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  width: fit-content !important;
+  padding: 1em;
+  margin: 0;
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: inherit;
+  line-height: inherit;
+
+  z-index: 1;
+
+
+  &::-ms-expand {
+    display: none;
+  }
+
+  outline: none;
+}
+
+.select {
+  display: grid;
+  grid-template-areas: "select";
+  align-items: center;
+  position: relative;
+
+  select,
+  &::after {
+    grid-area: select;
+  }
+
+  min-width: 15ch;
+  max-width: 30ch;
+
+  border: 1px solid var(--select-border);
+  border-radius: 0.25em;
+  padding: 0.25em 0.5em;
+
+  font-size: 1.25rem;
+  cursor: pointer;
+  line-height: 1.1;
+
+
+  background-color: #fff;
+  background-image: linear-gradient(to top, #f9f9f9, #fff 33%);
+
+  &:not(.select--multiple)::after {
+    content: "";
+    justify-self: end;
+    width: 0.8em;
+    height: 0.5em;
+    background-color: var(--select-arrow);
+    clip-path: polygon(100% 0%, 0 0%, 50% 100%);
+  }
+}
+
+select:focus + .focus {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border: 2px solid var(--select-focus);
+  border-radius: inherit;
+}
+
+select[multiple] {
+  padding-right: 0;
+
+  /*
+   * Safari will not reveal an option
+   * unless the select height has room to 
+   * show all of it
+   * Firefox and Chrome allow showing 
+   * a partial option
+   */
+  height: 6rem;
+
+  option {
+    white-space: normal;
+
+    outline-color: var(--select-focus);
+  }
+</style>
+<script>
+    $(document).ready(function(){
+    // Populate the Year dropdown (from currentYear + 2 to 1950) with default first option.
+    const currentYear = new Date().getFullYear();
+    for (let y = currentYear + 2; y >= 1950; y--) {
+        $('#car-years').append(`<option value="${y}">${y}</option>`);
+    }
+    
+    // Define an extensive list of popular makes in uppercase.
+    const popularMakes = [
+        "TOYOTA", "HONDA", "FORD", "CHEVROLET", "NISSAN",
+        "BMW", "MERCEDES-BENZ", "VOLKSWAGEN", "AUDI", "KIA",
+        "HYUNDAI", "SUBARU", "MAZDA", "DODGE", "JEEP",
+        "LEXUS", "ACURA", "INFINITI", "GMC", "CADILLAC",
+        "PORSCHE", "LAND ROVER", "JAGUAR", "VOLVO", "MITSUBISHI", "FIAT"
+    ];
+    
+    // Populate the Makes dropdown using the NHTSA API, filtering for popular makes only.
+    $.getJSON("https://vpic.nhtsa.dot.gov/api/vehicles/GetAllMakes?format=json", function(data){
+        if(data && data.Results) {
+            data.Results.forEach(function(makeObj){
+                if (popularMakes.includes(makeObj.Make_Name.toUpperCase())) {
+                    $('#car-makes').append(`<option value="${makeObj.Make_Name.toUpperCase()}">${makeObj.Make_Name.toUpperCase()}</option>`);
+                }
+            });
+        }
+    });
+    
+    // Function to update the Models dropdown based on selected year and make.
+    // Accepts an optional parameter to preselect a model.
+    function updateModels(selectedModel = null){
+        const year = $('#car-years').val();
+        const make = $('#car-makes').val();
+        $('#car-models').empty().append(`<option value="">-- Select Model --</option>`);
+        if(year && make) {
+            $.getJSON(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${make}/modelyear/${year}?format=json`, function(data){
+                if(data && data.Results && data.Results.length > 0){
+                    data.Results.forEach(function(model){
+                        $('#car-models').append(`<option value="${model.Model_Name}">${model.Model_Name}</option>`);
+                    });
+                    // If a specific model was provided (via VIN lookup), select it.
+                    if(selectedModel){
+                        if($('#car-models option[value="'+selectedModel+'"]').length === 0){
+                           $('#car-models').append(`<option value="${selectedModel}">${selectedModel}</option>`);
+                        }
+                        $('#car-models').val(selectedModel);
+                    }
+                } else {
+                    $('#car-models').append(`<option value="">No models found</option>`);
+                }
+            });
+        }
+    }
+    
+    // Update models when either the year or make dropdown changes.
+    $('#car-years, #car-makes').on('change', function(){
+        updateModels();
+    });
+    
+    // VIN lookup functionality: decode VIN and fill in year, make, and model.
+    $('#vinLookup').on('click', function(){
+        const vin = $('#vin-323').val().trim();
+        if(vin){
+            $.getJSON(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`, function(data){
+                if(data && data.Results && data.Results.length > 0){
+                    const result = data.Results[0];
+                    const modelYear = result.ModelYear;
+                    let make = result.Make;
+                    const model = result.Model;
+                    
+                    // Convert returned make to uppercase to match our list.
+                    if(make) {
+                        make = make.toUpperCase();
+                    }
+                    
+                    // Update Year dropdown.
+                    if(modelYear){
+                        if($('#car-years option[value="'+modelYear+'"]').length === 0){
+                           $('#car-years').append(`<option value="${modelYear}">${modelYear}</option>`);
+                        }
+                        $('#car-years').val(modelYear);
+                    } else {
+                        // Reset to default if no valid year.
+                        $('#car-years').val("");
+                    }
+                    
+                    // Update Make dropdown ONLY if the VIN's make is in our popular makes list.
+                    if(make && popularMakes.includes(make)){
+                        if($('#car-makes option[value="'+make+'"]').length === 0){
+                           $('#car-makes').append(`<option value="${make}">${make}</option>`);
+                        }
+                        $('#car-makes').val(make);
+                    } else {
+                        // Remove any option that is not in our popular makes list.
+                        $('#car-makes option').each(function(){
+                            if(!popularMakes.includes($(this).val())){
+                                $(this).remove();
+                            }
+                        });
+                        // Clear the selection if the VIN's make isn't popular.
+                        $('#car-makes').val("");
+                    }
+                    
+                    // Update Models dropdown with the VIN's model result only if the make is popular.
+                    if(model && make && popularMakes.includes(make)){
+                        updateModels(model);
+                    } else {
+                        // Clear models dropdown if VIN lookup fails to return a valid model from a popular make.
+                        $('#car-models').empty().append(`<option value="">-- Select Model --</option>`);
+                    }
+                }
+            });
+        }
+    });
+});
+    </script>
+
+
+
+<section id="contact-323">
+    <div class="cs-container">
+        <div class="cs-content">
+            <span class="cs-topper">Automotive Style</span>
+            <h2 class="cs-title">Fill Us In</h2>
+            <p class="cs-text">
+                From custom paint to lighting and tint, let us know what you need and we will get it done!
+            </p>
+            <!--Form-->
+            <form class="cs-form" id="cs-form-323" name="Contact Form" method="post">
+                <label class="cs-label">
+                    Name
+                    <input class="cs-input" required type="text" id="name-323" name="name" placeholder="Name">
+                </label>
+                <label class="cs-label cs-email">
+                    Email
+                    <input class="cs-input" required type="text" id="email-323" name="email" placeholder="Email">
+                </label>
+                <label class="cs-label cs-phone">
+                    Phone
+                    <input class="cs-input" required type="text" id="phone-323" name="phone" placeholder="Phone">
+                </label>
+                <label class="cs-label cs-email" for="car-years">Select Year
+                    <select class="cs-label" id="car-years" placeholder="Select Year*"><option value="">-- Select Year --</option></select>
+                </label>
+                <label class="cs-label cs-phone" for="car-makes">Select Make
+                    <select class="cs-label" id="car-makes"><option value="">-- Select Make --</option></select>
+                </label>
+                <label class="cs-label" for="car-models">Select Model
+                    <select class="cs-label" id="car-models"><option selected>-- Select Model --</option></select>
+                </label>
+                <label class="cs-label" for="car-models">Can't Find Your Car? Try the VIN Lookup
+                </label>
+                <!-- VIN Lookup Field -->
+                <label class="cs-label cs-phone">
+                    <div style="display: flex;flex-direction: column;">
+
+                        <input class="cs-input" type="text" id="vin-323" name="vin" placeholder="Enter VIN">
+                        <button type="button" id="vinLookup" style="margin-top: 1rem;outline: 0;cursor: pointer;border-radius: 6px;border: 2px solid #ff2419;color: #ff2419;background: 0 0;padding: 8px;box-shadow: rgba(0, 0, 0, 0.07) 0px 2px 4px 0px, rgba(0, 0, 0, 0.05) 0px 1px 1.5px 0px;font-weight: 800;font-size: 16px;height: 42px;:hover{background-color: #ff4742;color: #fff;}
+                        ">SEARCH</button>
+                    </div>
+                </label>
+                <label class="cs-label">
+                    Message
+                    <textarea class="cs-input cs-textarea" required name="Message" id="message-323" placeholder="Write About Your Service Needs..."></textarea>
+                </label>
+
+                
+
+                
+
+                
+
+                <button class="cs-button-solid cs-submit" type="submit" style="background-color:#ff2419;">Make an Appointment</button>
+            </form>
+        </div>
+        <!--Map Image, pin is made in the Figma then export as one image-->
+        <picture style="height: auto;aspect-ratio: 430 / 700;">
+            <script src="https://fast.wistia.com/player.js" async></script><script src="https://fast.wistia.com/embed/d0zqg6rktc.js" async type="module"></script><style>wistia-player[media-id='d0zqg6rktc']:not(:defined) { background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/d0zqg6rktc/swatch'); display: block; filter: blur(5px); padding-top:177.78%; }</style> <wistia-player media-id="d0zqg6rktc" aspect="0.5625"></wistia-player>
+            <!-- <source media="(max-width: 600px)" srcset="https://csimg.nyc3.digitaloceanspaces.com/Contact-Page/map+pin.png">
+            <source media="(min-width: 601px)" srcset="https://csimg.nyc3.digitaloceanspaces.com/Contact-Page/map+pin.png">
+            <img decoding="async" src="https://csimg.nyc3.digitaloceanspaces.com/Contact-Page/map+pin.png" alt="map" width="610" height="425" aria-hidden="true"> -->
+        </picture>
+    </div>
+</section>
+                                
+<!-- ============================================ -->
+<!--                    Services                  -->
+<!-- ============================================ -->
+
+<section id="services-1354">
+    <div class="cs-container">
+        <div class="cs-content">
+            <span class="cs-topper">Our Services</span>
+            <h2 class="cs-title">We’re Committed to Deliver Top High Quality Services</h2>
+        </div>
+        <ul class="cs-card-group">
+            <li class="cs-item">
+                <a href="" class="cs-link">
+                    <h3 class="cs-h3"><span class="cs-span">Car</span> Detailing</h3>
+                </a>
+                <picture class="cs-background">
+                    <source media="(max-width: 600px)" srcset="/assets/images/wash-5144821_1280.jpg">
+                    <source media="(min-width: 601px)" srcset="/assets/images/wash-5144821_1280.jpg">
+                    <img decoding="async" src="/assets/images/wash-5144821_1280.jpg" alt="construction" width="305" height="305" aria-hidden="true">
+                </picture>
+            </li>
+            <li class="cs-item">
+                <a href="" class="cs-link">
+                    <h3 class="cs-h3"><span class="cs-span">Car & Boat</span> Audio Systems</h3>
+                </a>
+                <picture class="cs-background">
+                    <source media="(max-width: 600px)" srcset="/assets/images/audio.jpg">
+                    <source media="(min-width: 601px)" srcset="/assets/images/audio.jpg">
+                    <img decoding="async" src="/assets/images/audio.jpg" alt="construction" width="305" height="305" aria-hidden="true">
+                </picture>
+            </li>
+            <li class="cs-item">
+                <a href="" class="cs-link">
+                    <h3 class="cs-h3"><span class="cs-span">Auto</span> Wrap</h3>
+                </a>
+                <picture class="cs-background">
+                    <source media="(max-width: 600px)" srcset="/assets/images/carwrap.jpg">
+                    <source media="(min-width: 601px)" srcset="/assets/images/carwrap.jpg">
+                    <img decoding="async" src="/assets/images/carwrap.jpg" alt="construction" width="305" height="305" aria-hidden="true">
+                </picture>
+            </li>
+            <li class="cs-item">
+                <a href="" class="cs-link">
+                    <h3 class="cs-h3"><span class="cs-span">Auto</span> Wheels & Tires</h3>
+                </a>
+                <picture class="cs-background">
+                    <source media="(max-width: 600px)" srcset="/assets/images/rim.jpg">
+                    <source media="(min-width: 601px)" srcset="/assets/images/rim.jpg">
+                    <img decoding="async" src="/assets/images/rim.jpg" alt="construction" width="305" height="305" aria-hidden="true">
+                </picture>
+            </li>
+        </ul>
+    </div>
+</section>
+                                
 
 <!-- ============================================ -->
 <!--                Side By Side                  -->
@@ -888,6 +1231,9 @@ eleventyNavigation:
         </div>
     </div>
 </section>
+
+
+
                                 
     {% include 'components/cta.html' %}
 {% endblock %}
