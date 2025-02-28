@@ -173,122 +173,195 @@ select[multiple] {
     outline-color: var(--select-focus);
   }
 </style>
+<form class="cs-form" id="cs-form-323" name="Contact Form" method="post" netlify>
+    <label class="cs-label">
+        Name
+        <input class="cs-input" required type="text" id="name-323" name="name" placeholder="Name">
+    </label>
+    <label class="cs-label cs-email">
+        Email
+        <input class="cs-input" required type="text" id="email-323" name="email" placeholder="Email">
+    </label>
+    <label class="cs-label cs-phone">
+        Phone
+        <input class="cs-input" required type="text" id="phone-323" name="phone" placeholder="Phone">
+    </label>
+    <label class="cs-label cs-email" for="car-years">
+        Select Year
+        <select class="cs-label" id="car-years" placeholder="Select Year*">
+            <option value="">-- Select Year --</option>
+        </select>
+        <!-- Hidden input for Year -->
+        <input type="hidden" id="hidden-year" name="car_year" value="">
+    </label>
+    <label class="cs-label cs-phone" for="car-makes">
+        Select Make
+        <select class="cs-label" id="car-makes">
+            <option value="">-- Select Make --</option>
+        </select>
+        <!-- Hidden input for Make -->
+        <input type="hidden" id="hidden-make" name="car_make" value="">
+    </label>
+    <label class="cs-label" for="car-models">
+        Select Model
+        <select class="cs-label" id="car-models">
+            <option selected value="">-- Select Model --</option>
+        </select>
+        <!-- Hidden input for Model -->
+        <input type="hidden" id="hidden-model" name="car_model" value="">
+    </label>
+    <label class="cs-label" for="car-models">
+        Can't Find Your Car? Try the VIN Lookup
+    </label>
+    <!-- VIN Lookup Field -->
+    <label class="cs-label cs-phone">
+        <div style="display: flex;flex-direction: column;">
+            <input class="cs-input" type="text" id="vin-323" name="vin" placeholder="Enter VIN">
+            <button type="button" id="vinLookup" style="margin-top: 1rem;outline: 0;cursor: pointer;border-radius: 6px;border: 2px solid #ff2419;color: #ff2419;background: 0 0;padding: 8px;box-shadow: rgba(0, 0, 0, 0.07) 0px 2px 4px 0px, rgba(0, 0, 0, 0.05) 0px 1px 1.5px 0px;font-weight: 800;font-size: 16px;height: 42px;">
+                SEARCH
+            </button>
+        </div>
+    </label>
+    <label class="cs-label">
+        Message
+        <textarea class="cs-input cs-textarea" required name="Message" id="message-323" placeholder="Write About Your Service Needs..."></textarea>
+    </label>
+    <button class="cs-button-solid cs-submit" type="submit" style="background-color:#ff2419;">Make an Appointment</button>
+</form>
+
 <script>
     $(document).ready(function(){
-    // Populate the Year dropdown (from currentYear + 2 to 1950) with default first option.
-    const currentYear = new Date().getFullYear();
-    for (let y = currentYear + 2; y >= 1950; y--) {
-        $('#car-years').append(`<option value="${y}">${y}</option>`);
-    }
-    
-    // Define an extensive list of popular makes in uppercase.
-    const popularMakes = [
-        "TOYOTA", "HONDA", "FORD", "CHEVROLET", "NISSAN",
-        "BMW", "MERCEDES-BENZ", "VOLKSWAGEN", "AUDI", "KIA",
-        "HYUNDAI", "SUBARU", "MAZDA", "DODGE", "JEEP",
-        "LEXUS", "ACURA", "INFINITI", "GMC", "CADILLAC",
-        "PORSCHE", "LAND ROVER", "JAGUAR", "VOLVO", "MITSUBISHI", "FIAT"
-    ];
-    
-    // Populate the Makes dropdown using the NHTSA API, filtering for popular makes only.
-    $.getJSON("https://vpic.nhtsa.dot.gov/api/vehicles/GetAllMakes?format=json", function(data){
-        if(data && data.Results) {
-            data.Results.forEach(function(makeObj){
-                if (popularMakes.includes(makeObj.Make_Name.toUpperCase())) {
-                    $('#car-makes').append(`<option value="${makeObj.Make_Name.toUpperCase()}">${makeObj.Make_Name.toUpperCase()}</option>`);
-                }
-            });
+        // Function to update hidden inputs with the current select values.
+        function updateHiddenInputs(){
+            $('#hidden-year').val($('#car-years').val());
+            $('#hidden-make').val($('#car-makes').val());
+            $('#hidden-model').val($('#car-models').val());
         }
-    });
-    
-    // Function to update the Models dropdown based on selected year and make.
-    // Accepts an optional parameter to preselect a model.
-    function updateModels(selectedModel = null){
-        const year = $('#car-years').val();
-        const make = $('#car-makes').val();
-        $('#car-models').empty().append(`<option value="">-- Select Model --</option>`);
-        if(year && make) {
-            $.getJSON(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${make}/modelyear/${year}?format=json`, function(data){
-                if(data && data.Results && data.Results.length > 0){
-                    data.Results.forEach(function(model){
-                        $('#car-models').append(`<option value="${model.Model_Name}">${model.Model_Name}</option>`);
-                    });
-                    // If a specific model was provided (via VIN lookup), select it.
-                    if(selectedModel){
-                        if($('#car-models option[value="'+selectedModel+'"]').length === 0){
-                           $('#car-models').append(`<option value="${selectedModel}">${selectedModel}</option>`);
-                        }
-                        $('#car-models').val(selectedModel);
-                    }
-                } else {
-                    $('#car-models').append(`<option value="">No models found</option>`);
-                }
-            });
+        
+        // Populate the Year dropdown (from currentYear + 2 to 1950)
+        const currentYear = new Date().getFullYear();
+        for (let y = currentYear + 2; y >= 1950; y--) {
+            $('#car-years').append(`<option value="${y}">${y}</option>`);
         }
-    }
-    
-    // Update models when either the year or make dropdown changes.
-    $('#car-years, #car-makes').on('change', function(){
-        updateModels();
-    });
-    
-    // VIN lookup functionality: decode VIN and fill in year, make, and model.
-    $('#vinLookup').on('click', function(){
-        const vin = $('#vin-323').val().trim();
-        if(vin){
-            $.getJSON(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`, function(data){
-                if(data && data.Results && data.Results.length > 0){
-                    const result = data.Results[0];
-                    const modelYear = result.ModelYear;
-                    let make = result.Make;
-                    const model = result.Model;
-                    
-                    // Convert returned make to uppercase to match our list.
-                    if(make) {
-                        make = make.toUpperCase();
+        
+        // Define popular makes (in uppercase)
+        const popularMakes = [
+            "TOYOTA", "HONDA", "FORD", "CHEVROLET", "NISSAN",
+            "BMW", "MERCEDES-BENZ", "VOLKSWAGEN", "AUDI", "KIA",
+            "HYUNDAI", "SUBARU", "MAZDA", "DODGE", "JEEP",
+            "LEXUS", "ACURA", "INFINITI", "GMC", "CADILLAC",
+            "PORSCHE", "LAND ROVER", "JAGUAR", "VOLVO", "MITSUBISHI", "FIAT"
+        ];
+        
+        // Populate the Makes dropdown using the NHTSA API, filtering for popular makes.
+        $.getJSON("https://vpic.nhtsa.dot.gov/api/vehicles/GetAllMakes?format=json", function(data){
+            if(data && data.Results) {
+                data.Results.forEach(function(makeObj){
+                    if (popularMakes.includes(makeObj.Make_Name.toUpperCase())) {
+                        $('#car-makes').append(`<option value="${makeObj.Make_Name.toUpperCase()}">${makeObj.Make_Name.toUpperCase()}</option>`);
                     }
-                    
-                    // Update Year dropdown.
-                    if(modelYear){
-                        if($('#car-years option[value="'+modelYear+'"]').length === 0){
-                           $('#car-years').append(`<option value="${modelYear}">${modelYear}</option>`);
-                        }
-                        $('#car-years').val(modelYear);
-                    } else {
-                        // Reset to default if no valid year.
-                        $('#car-years').val("");
-                    }
-                    
-                    // Update Make dropdown ONLY if the VIN's make is in our popular makes list.
-                    if(make && popularMakes.includes(make)){
-                        if($('#car-makes option[value="'+make+'"]').length === 0){
-                           $('#car-makes').append(`<option value="${make}">${make}</option>`);
-                        }
-                        $('#car-makes').val(make);
-                    } else {
-                        // Remove any option that is not in our popular makes list.
-                        $('#car-makes option').each(function(){
-                            if(!popularMakes.includes($(this).val())){
-                                $(this).remove();
-                            }
+                });
+            }
+        });
+        
+        // Function to update the Models dropdown based on selected year and make.
+        // Optionally preselects a model if provided.
+        function updateModels(selectedModel = null){
+            const year = $('#car-years').val();
+            const make = $('#car-makes').val();
+            $('#car-models').empty().append(`<option value="">-- Select Model --</option>`);
+            if(year && make) {
+                $.getJSON(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${make}/modelyear/${year}?format=json`, function(data){
+                    if(data && data.Results && data.Results.length > 0){
+                        data.Results.forEach(function(model){
+                            $('#car-models').append(`<option value="${model.Model_Name}">${model.Model_Name}</option>`);
                         });
-                        // Clear the selection if the VIN's make isn't popular.
-                        $('#car-makes').val("");
-                    }
-                    
-                    // Update Models dropdown with the VIN's model result only if the make is popular.
-                    if(model && make && popularMakes.includes(make)){
-                        updateModels(model);
+                        if(selectedModel){
+                            if($('#car-models option[value="'+selectedModel+'"]').length === 0){
+                                $('#car-models').append(`<option value="${selectedModel}">${selectedModel}</option>`);
+                            }
+                            $('#car-models').val(selectedModel);
+                        }
                     } else {
-                        // Clear models dropdown if VIN lookup fails to return a valid model from a popular make.
-                        $('#car-models').empty().append(`<option value="">-- Select Model --</option>`);
+                        $('#car-models').append(`<option value="">No models found</option>`);
                     }
-                }
-            });
+                    // Update hidden inputs after models load.
+                    updateHiddenInputs();
+                });
+            } else {
+                updateHiddenInputs();
+            }
         }
+        
+        // Update hidden inputs when a dropdown value changes.
+        $('#car-years').on('change', function(){
+            updateHiddenInputs();
+            updateModels();
+        });
+        $('#car-makes').on('change', function(){
+            updateHiddenInputs();
+            updateModels();
+        });
+        $('#car-models').on('change', updateHiddenInputs);
+        
+        // VIN lookup: decode VIN and auto-update year, make, and model.
+        $('#vinLookup').on('click', function(){
+            const vin = $('#vin-323').val().trim();
+            if(vin){
+                $.getJSON(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`, function(data){
+                    if(data && data.Results && data.Results.length > 0){
+                        const result = data.Results[0];
+                        const modelYear = result.ModelYear;
+                        let make = result.Make;
+                        const model = result.Model;
+                        
+                        // Convert make to uppercase.
+                        if(make) {
+                            make = make.toUpperCase();
+                        }
+                        
+                        // Update Year dropdown.
+                        if(modelYear){
+                            if($('#car-years option[value="'+modelYear+'"]').length === 0){
+                                $('#car-years').append(`<option value="${modelYear}">${modelYear}</option>`);
+                            }
+                            $('#car-years').val(modelYear);
+                        } else {
+                            $('#car-years').val("");
+                        }
+                        
+                        // Update Make dropdown if the VIN's make is popular.
+                        if(make && popularMakes.includes(make)){
+                            if($('#car-makes option[value="'+make+'"]').length === 0){
+                                $('#car-makes').append(`<option value="${make}">${make}</option>`);
+                            }
+                            $('#car-makes').val(make);
+                        } else {
+                            $('#car-makes option').each(function(){
+                                if(!popularMakes.includes($(this).val())){
+                                    $(this).remove();
+                                }
+                            });
+                            $('#car-makes').val("");
+                        }
+                        
+                        // Update hidden fields for Year and Make.
+                        updateHiddenInputs();
+                        
+                        // Update Models dropdown with the VIN's model if valid.
+                        if(model && make && popularMakes.includes(make)){
+                            updateModels(model);
+                        } else {
+                            $('#car-models').empty().append(`<option value="">-- Select Model --</option>`);
+                            updateHiddenInputs();
+                        }
+                    }
+                });
+            }
+        });
     });
-});
-    </script>
+</script>
+
 
 
 <section id="contact-323">
@@ -313,37 +386,46 @@ select[multiple] {
                     Phone
                     <input class="cs-input" required type="text" id="phone-323" name="phone" placeholder="Phone">
                 </label>
-                <label class="cs-label cs-email" for="car-years">Select Year
-                    <select class="cs-label" id="car-years" placeholder="Select Year*"><option value="">-- Select Year --</option></select>
+                <label class="cs-label cs-email" for="car-years">
+                    Select Year
+                    <select class="cs-label" id="car-years" placeholder="Select Year*">
+                        <option value="">-- Select Year --</option>
+                    </select>
+                    <!-- Hidden input for Year -->
+                    <input type="hidden" id="hidden-year" name="car_year" value="">
                 </label>
-                <label class="cs-label cs-phone" for="car-makes">Select Make
-                    <select class="cs-label" id="car-makes"><option value="">-- Select Make --</option></select>
+                <label class="cs-label cs-phone" for="car-makes">
+                    Select Make
+                    <select class="cs-label" id="car-makes">
+                        <option value="">-- Select Make --</option>
+                    </select>
+                    <!-- Hidden input for Make -->
+                    <input type="hidden" id="hidden-make" name="car_make" value="">
                 </label>
-                <label class="cs-label" for="car-models">Select Model
-                    <select class="cs-label" id="car-models"><option selected>-- Select Model --</option></select>
+                <label class="cs-label" for="car-models">
+                    Select Model
+                    <select class="cs-label" id="car-models">
+                        <option selected value="">-- Select Model --</option>
+                    </select>
+                    <!-- Hidden input for Model -->
+                    <input type="hidden" id="hidden-model" name="car_model" value="">
                 </label>
-                <label class="cs-label" for="car-models">Can't Find Your Car? Try the VIN Lookup
+                <label class="cs-label" for="car-models">
+                    Can't Find Your Car? Try the VIN Lookup
                 </label>
                 <!-- VIN Lookup Field -->
                 <label class="cs-label cs-phone">
                     <div style="display: flex;flex-direction: column;">
-
                         <input class="cs-input" type="text" id="vin-323" name="vin" placeholder="Enter VIN">
-                        <button type="button" id="vinLookup" style="margin-top: 1rem;outline: 0;cursor: pointer;border-radius: 6px;border: 2px solid #ff2419;color: #ff2419;background: 0 0;padding: 8px;box-shadow: rgba(0, 0, 0, 0.07) 0px 2px 4px 0px, rgba(0, 0, 0, 0.05) 0px 1px 1.5px 0px;font-weight: 800;font-size: 16px;height: 42px;:hover{background-color: #ff4742;color: #fff;}
-                        ">SEARCH</button>
+                        <button type="button" id="vinLookup" style="margin-top: 1rem;outline: 0;cursor: pointer;border-radius: 6px;border: 2px solid #ff2419;color: #ff2419;background: 0 0;padding: 8px;box-shadow: rgba(0, 0, 0, 0.07) 0px 2px 4px 0px, rgba(0, 0, 0, 0.05) 0px 1px 1.5px 0px;font-weight: 800;font-size: 16px;height: 42px;">
+                            SEARCH
+                        </button>
                     </div>
                 </label>
                 <label class="cs-label">
                     Message
                     <textarea class="cs-input cs-textarea" required name="Message" id="message-323" placeholder="Write About Your Service Needs..."></textarea>
                 </label>
-
-                
-
-                
-
-                
-
                 <button class="cs-button-solid cs-submit" type="submit" style="background-color:#ff2419;">Make an Appointment</button>
             </form>
         </div>
